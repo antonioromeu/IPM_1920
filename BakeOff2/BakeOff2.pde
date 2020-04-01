@@ -170,20 +170,50 @@ Target getTargetBounds(int i)
 // This method is called in every draw cycle; you can update the target's UI here
 void drawTarget(int i) {
   Target target = getTargetBounds(i);
-
-  // check whether current circle is the intended target
-  if (trials.get(trialNum) == i) {
-    stroke(255, 0, 255);
-    strokeWeight(3);
-    fill(155);
+  
+  if (trials.get(trialNum) == i) { // check whether current circle is the intended target
+    color blue = color(0, 128, 255);
+    color green = color(0, 255, 0);
+    color orange = color(255, 128, 0);
+    color red = color(255, 0, 0);
+    color circle0 = lerpColor(blue, green, 0);
+    color circle1 = lerpColor(blue, green, .33);
+    color circle2 = lerpColor(blue, green, .66);
+    color circle3 = lerpColor(blue, green, 1);
+    color circle4 = lerpColor(green, orange, 0);
+    color circle5 = lerpColor(green, orange, .33);
+    color circle6 = lerpColor(green, orange, .66);
+    color circle7 = lerpColor(green, orange, 1);
+    color circle8 = lerpColor(orange, red, 0);
+    color circle9 = lerpColor(orange, red, .33);
+    color circle10 = lerpColor(orange, red, .66);
+    color circle11 = lerpColor(orange, red, 1);
+    fill(circle0);
+    circle(target.x, target.y, target.w+120);
+    fill(circle1);
+    circle(target.x, target.y, target.w+110);
+    fill(circle2);
+    circle(target.x, target.y, target.w+100);
+    fill(circle3);
+    circle(target.x, target.y, target.w+90);
+    fill(circle4);
+    circle(target.x, target.y, target.w+80);
+    fill(circle5);
+    circle(target.x, target.y, target.w+70);
+    fill(circle6);
+    circle(target.x, target.y, target.w+60);
+    fill(circle7);
+    circle(target.x, target.y, target.w+50);
+    fill(circle8);
+    circle(target.x, target.y, target.w+40);
+    fill(circle9);
+    circle(target.x, target.y, target.w+30);
+    fill(circle10);
+    circle(target.x, target.y, target.w+20);
+    fill(circle11);
+    circle(target.x, target.y, target.w+10);
+    fill(255, 255, 255);
     circle(target.x, target.y, target.w);
-    rectMode(CENTER);
-    fill(255, 0, 255);
-    rect(target.x, target.y, target.w/2, target.w/2);
-    arrow(target.x-50, target.y-50, target.x-target.w/2, target.y-target.w/2);
-    arrow(target.x+50, target.y-50, target.x+target.w/2, target.y-target.w/2);
-    arrow(target.x+50, target.y+50, target.x+target.w/2, target.y+target.w/2);
-    arrow(target.x-50, target.y+50, target.x-target.w/2, target.y+target.w/2);
   }
   
   else if (trialNum != 47 && trials.get(trialNum+1) == i) {
