@@ -19,6 +19,7 @@ ArrayList<Integer> trials  = new ArrayList<Integer>();    // contains the order 
 int trialNum               = 0;                           // the current trial number (indexes into trials array above)
 final int NUM_REPEATS      = 3;                           // sets the number of times each target repeats in the test - FOR THE BAKEOFF NEEDS TO BE 3!
 boolean ended              = false;
+float[] fitts              = new float[48];
 
 // Performance variables
 int startTime              = 0;      // time starts when the first click is captured
@@ -71,17 +72,6 @@ void draw()
   for (int i = 0; i < 16; i++) drawTarget(i);
 }
 
-void arrow(float x1, float y1, float x2, float y2) {
-  line(x1, y1, x2, y2);
-  pushMatrix();
-  translate(x2, y2);
-  float a = atan2(x1-x2, y2-y1);
-  rotate(a);
-  line(0, 0, -10, -10);
-  line(0, 0, 10, -10);
-  popMatrix();
-}
-
 boolean hasEnded() {
    if(ended) return true;    // returns if test has ended before
    
@@ -118,42 +108,65 @@ void printResults(float timeTaken, float penalty)
   fill(255);    //set text fill color to white
   text(day() + "/" + month() + "/" + year() + "  " + hour() + ":" + minute() + ":" + second() , 100, 20);   // display time on screen
   
-  text("Finished!", width / 2, height / 2); 
-  text("Hits: " + hits, width / 2, height / 2 + 20);
-  text("Misses: " + misses, width / 2, height / 2 + 40);
-  text("Accuracy: " + (float)hits*100f/(float)(hits+misses) +"%", width / 2, height / 2 + 60);
-  text("Total time taken: " + timeTaken + " sec", width / 2, height / 2 + 80);
-  text("Average time for each target: " + nf((timeTaken)/(float)(hits+misses),0,3) + " sec", width / 2, height / 2 + 100);
-  text("Average time for each target + penalty: " + nf(((timeTaken)/(float)(hits+misses) + penalty),0,3) + " sec", width / 2, height / 2 + 140);
-  
+  text("Finished!", width / 2, 30); 
+  text("Hits: " + hits, width / 2, 50);
+  text("Misses: " + misses, width / 2, 70);
+  text("Accuracy: " + (float)hits*100f/(float)(hits+misses) +"%", width / 2, 90);
+  text("Total time taken: " + timeTaken + " sec", width / 2, 110);
+  text("Average time for each target: " + nf((timeTaken)/(float)(hits+misses),0,3) + " sec", width / 2, 130);
+  text("Average time for each target + penalty: " + nf(((timeTaken)/(float)(hits+misses) + penalty),0,3) + " sec", width / 2, 150);
+  text("Fitts Index of Performance", width / 2, 190);
+  int h = 210;
+  float w = width / 4;
+  for (int i = 0; i < 48; i++) {
+    if (i == 0)
+      text("Target " + (i+1) + ": " + "---", w, h);
+    else if (fitts[i] != -1)
+      text("Target " + (i+1) + ": " + fitts[i], w, h);
+    else
+      text("Target " + (i+1) + ": MISSED", w, h);
+    h += 20;
+    if (i == 23) {
+      h = 210;
+      w += width / 2;
+    }
+  }
   saveFrame("results-######.png");    // saves screenshot in current folder
 }
 
 // Mouse button was release - lets test to see if hit was in the correct target
-void mouseReleased() 
-{
+void mouseReleased() {
   if (trialNum >= trials.size()) return;      // if study is over, just return
-  if (trialNum == 0) startTime = millis();    // check if first click, if so, start timer
-  if (trialNum == trials.size() - 1)          // check if final click
-  {
+  if (trialNum == 0) {
+    startTime = millis();    // check if first click, if so, start timer
+    fitts[0] = 0;
+  }
+  if (trialNum == trials.size() - 1) {        // check if final click
     finishTime = millis();    // save final timestamp
     println("We're done!");
   }
   
+  float hit = 0;
   Target target = getTargetBounds(trials.get(trialNum));    // get the location and size for the target in the current trial
   
+  if (trialNum > 0) {
+    Target target2 = getTargetBounds(trials.get(trialNum-1));
+    hit = log((dist(target2.x, target2.y, target.x, target.y)/TARGET_SIZE)+1)/log(2);
+  }
+    
   // Check to see if mouse cursor is inside the target bounds
-  if(dist(target.x, target.y, mouseX, mouseY) < target.w/2)
-  {
+  if (dist(target.x, target.y, mouseX, mouseY) < target.w/2) {
     System.out.println("HIT! " + trialNum + " " + (millis() - startTime));     // success - hit!
+    fitts[trialNum] = hit;
     hits++; // increases hits counter 
   }
-  else
-  {
+  
+  else {
     System.out.println("MISSED! " + trialNum + " " + (millis() - startTime));  // fail
+    fitts[trialNum] = -1;
     misses++;   // increases misses counter
   }
-
+  
   trialNum++;   // move on to the next trial; UI will be updated on the next draw() cycle
 }  
 
