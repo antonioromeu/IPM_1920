@@ -216,11 +216,6 @@ void drawTarget(int i) {
   Target target2 = getTargetBounds(trials.get(trialNum));
   
   if (trials.get(trialNum) == i) { // check whether current circle is the intended target
-    color blue = color(0, 128, 255);
-    color green = color(0, 255, 0);
-    color orange = color(255, 128, 0);
-    color red = color(255, 0, 0);
-    color black = color(0, 0, 0);
     color circle0 = lerpColor(blue, green, 0);
     color circle1 = lerpColor(blue, green, .33);
     color circle2 = lerpColor(blue, green, .66);
@@ -264,7 +259,7 @@ void drawTarget(int i) {
   }
   
   else if (trialNum != 47 && trials.get(trialNum+1) == i) {
-    stroke(255, 255, 0);
+    stroke(white);
     strokeWeight(3);
     fill(155);
     circle(target.x, target.y, target.w);
