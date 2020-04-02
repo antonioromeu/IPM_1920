@@ -27,6 +27,14 @@ int finishTime             = 0;      // records the time of the final click
 int hits                   = 0;      // number of successful clicks
 int misses                 = 0;      // number of missed clicks
 
+// Most used colors
+color blue = color(0, 128, 255);
+color green = color(0, 255, 0);
+color orange = color(255, 128, 0);
+color red = color(255, 0, 0);
+color black = color(0, 0, 0);
+color white = color(255, 255, 255);
+
 // Class used to store properties of a target
 class Target
 {
@@ -134,6 +142,28 @@ void printResults(float timeTaken, float penalty)
   saveFrame("results-######.png");    // saves screenshot in current folder
 }
 
+void arrow(float x1, float y1, float x2, float y2) {
+  line(x1, y1, x2, y2);
+  pushMatrix();
+  translate(x2, y2);
+  float a = atan2(x1-x2, y2-y1);
+  rotate(a);
+  line(0, 0, -10, -10);
+  line(0, 0, 10, -10);
+  popMatrix();
+}
+
+/*
+void arrow(int x1, int y1, int x2, int y2) {
+  line(x1, y1, x2, y2);
+  pushMatrix();
+  rotate(atan2(y2-y1, x2-x1));
+  translate(x2, y2);
+  triangle(0, 0, -10, 5, -10, -5);
+  popMatrix();
+}
+*/
+
 // Mouse button was release - lets test to see if hit was in the correct target
 void mouseReleased() {
   if (trialNum >= trials.size()) return;      // if study is over, just return
@@ -183,12 +213,14 @@ Target getTargetBounds(int i)
 // This method is called in every draw cycle; you can update the target's UI here
 void drawTarget(int i) {
   Target target = getTargetBounds(i);
+  Target target2 = getTargetBounds(trials.get(trialNum));
   
   if (trials.get(trialNum) == i) { // check whether current circle is the intended target
     color blue = color(0, 128, 255);
     color green = color(0, 255, 0);
     color orange = color(255, 128, 0);
     color red = color(255, 0, 0);
+    color black = color(0, 0, 0);
     color circle0 = lerpColor(blue, green, 0);
     color circle1 = lerpColor(blue, green, .33);
     color circle2 = lerpColor(blue, green, .66);
@@ -225,7 +257,9 @@ void drawTarget(int i) {
     circle(target.x, target.y, target.w+20);
     fill(circle11);
     circle(target.x, target.y, target.w+10);
-    fill(255, 255, 255);
+    stroke(black);
+    strokeWeight(3);
+    fill(white);
     circle(target.x, target.y, target.w);
   }
   
@@ -234,9 +268,9 @@ void drawTarget(int i) {
     strokeWeight(3);
     fill(155);
     circle(target.x, target.y, target.w);
-    fill(255, 255, 0);
-    textAlign(CENTER, CENTER);
-    text("NEXT", target.x, target.y-0.5);
+    noStroke();
+    stroke(white);
+    arrow(target2.x, target2.y, target.x, target.y);
   }
 
   else {
