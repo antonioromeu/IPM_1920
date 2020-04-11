@@ -20,6 +20,8 @@ final int NUM_REPEATS      = 3;                           // sets the number of 
 boolean ended              = false;
 float[] fitts              = new float[48];
 
+BullsEye bullsEye;
+
 // Performance variables
 int startTime              = 0;      // time starts when the first click is captured
 int finishTime             = 0;      // records the time of the final click
@@ -91,28 +93,42 @@ class BullsEye {
         fill(circle0);
         circle(x, y, w + 120);
         fill(circle1);
-        circle(x, y, w+110);
+        circle(x, y, w + 110);
         fill(circle2);
-        circle(x, y, w+100);
+        circle(x, y, w + 100);
         fill(circle3);
-        circle(x, y, w+90);
+        circle(x, y, w + 90);
         fill(circle4);
-        circle(x, y, w+80);
+        circle(x, y, w + 80);
         fill(circle5);
-        circle(x, y, w+70);
+        circle(x, y, w + 70);
         fill(circle6);
-        circle(x, y, w+60);
+        circle(x, y, w + 60);
         fill(circle7);
-        circle(x, y, w+50);
+        circle(x, y, w + 50);
         fill(circle8);
-        circle(x, y, w+40);
+        circle(x, y, w + 40);
         fill(circle9);
-        circle(x, y, w+30);
+        circle(x, y, w + 30);
         fill(circle10);
-        circle(x, y, w+20);
+        circle(x, y, w + 20);
         fill(circle11);
-        circle(x, y, w+10);
+        circle(x, y, w + 10);
     }
+}
+
+void arrow(float x1, float y1, float x2, float y2) {
+    strokeWeight(3);
+    stroke(255, 255, 255);
+    line(x1, y1, x2, y2);
+    pushMatrix();
+    translate(x2, y2);
+    float a = atan2(x1-x2, y2-y1);
+    rotate(a);
+    line(0, 0, -10, -10);
+    line(0, 0, 10, -10);
+    popMatrix();
+    noStroke();
 }
 
 // Setup window and vars - runs once
@@ -166,7 +182,7 @@ void draw() {
         Target current = getTargetBounds(trials.get(trialNum));
         Target next = getTargetBounds(trials.get(trialNum + 1));
         if (current.x != next.x || current.y != next.y)
-            arrow(current.x, current.y, next.x, next,y);
+            arrow(current.x, current.y, next.x, next.y);
     }
 }
 
@@ -243,7 +259,7 @@ void mouseReleased() {
 
     if (trialNum > 0) {
         Target target2 = getTargetBounds(trials.get(trialNum-1));
-        hit = log((dist(target2.x, target2.y, target.x, target.y)/TARGET_SIZE)+1)/log(2)
+        hit = log((dist(target2.x, target2.y, target.x, target.y)/TARGET_SIZE)+1)/log(2);
     }
 
     // Check to see if mouse cursor is inside the target bounds
