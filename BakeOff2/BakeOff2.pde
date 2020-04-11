@@ -1,4 +1,4 @@
-// Bakeoff #2 - Seleção de Alvos e Fatores Humanos
+// Bakeoff #2 - Seleção de Alvos e Fatores Humanos //<>//
 // IPM 2019-20, Semestre 2
 // Bake-off: durante a aula de lab da semana de 20 de Abril
 // Submissão via Twitter: exclusivamente no dia 24 de Abril, até às 23h59
@@ -27,14 +27,10 @@ int finishTime             = 0;      // records the time of the final click
 int hits                   = 0;      // number of successful clicks
 int misses                 = 0;      // number of missed clicks
 
-// Most used colors
-color blue = color(0, 128, 255);
-color green = color(0, 255, 0);
-color orange = color(255, 128, 0);
-color red = color(255, 0, 0);
-color black = color(0, 0, 0);
-color white = color(255, 255, 255);
 
+// BullsEye
+BullsEye bullsEye;
+ 
 // Class used to store properties of a target
 class Target
 {
@@ -47,6 +43,94 @@ class Target
     y = posy;
     w = twidth;
   }
+}
+class BullsEye 
+{
+  int x, y, nx, ny, xincrement, yincrement;
+  int frames = 3;
+  float w;
+  
+  BullsEye(Target target) {
+    x = target.x;
+    y = target.y;
+    w = target.w;
+    nx = target.x;
+    ny = target.y;
+    xincrement = 0;
+    yincrement = 0;
+  }
+  
+  void move() {
+    if (abs(nx-x) < abs(xincrement)) x = nx;
+    else x+=xincrement;
+    if (abs(ny-y) < abs(yincrement)) y = ny;
+    else y+=yincrement; 
+  }
+  
+  void setNext(Target target) {
+    nx = target.x;
+    ny = target.y;
+    xincrement = int((nx-x)/frames);
+    yincrement = int((ny-y)/frames);
+  }
+  
+  void display() {
+    color blue = color(0, 128, 255);
+    color green = color(0, 255, 0);
+    color orange = color(255, 128, 0);
+    color red = color(255, 0, 0);
+    color circle0 = lerpColor(blue, green, 0);
+    color circle1 = lerpColor(blue, green, .33);
+    color circle2 = lerpColor(blue, green, .66);
+    color circle3 = lerpColor(blue, green, 1);
+    color circle4 = lerpColor(green, orange, 0);
+    color circle5 = lerpColor(green, orange, .33);
+    color circle6 = lerpColor(green, orange, .66);
+    color circle7 = lerpColor(green, orange, 1);
+    color circle8 = lerpColor(orange, red, 0);
+    color circle9 = lerpColor(orange, red, .33);
+    color circle10 = lerpColor(orange, red, .66);
+    color circle11 = lerpColor(orange, red, 1);
+    fill(circle0);
+    circle(x, y, w+120);
+    fill(circle1);
+    circle(x, y, w+110);
+    fill(circle2);
+    circle(x, y, w+100);
+    fill(circle3);
+    circle(x, y, w+90);
+    fill(circle4);
+    circle(x, y, w+80);
+    fill(circle5);
+    circle(x, y, w+70);
+    fill(circle6);
+    circle(x, y, w+60);
+    fill(circle7);
+    circle(x, y, w+50);
+    fill(circle8);
+    circle(x, y, w+40);
+    fill(circle9);
+    circle(x, y, w+30);
+    fill(circle10);
+    circle(x, y, w+20);
+    fill(circle11);
+    circle(x, y, w+10);
+  }
+    
+}
+ 
+void arrow(float x1, float y1, float x2, float y2) {
+  strokeWeight(3);
+  stroke(255, 255, 255);
+  line(x1, y1, x2, y2);
+  pushMatrix();
+  translate(x2, y2);
+  float a = atan2(x1-x2, y2-y1);
+  rotate(a);
+  line(0, 0, -10, -10);
+  line(0, 0, 10, -10);
+  popMatrix();
+  noStroke();
 }
 
 // Setup window and vars - runs once
@@ -61,6 +145,10 @@ void setup()
   textAlign(CENTER);                    // align text
   
   randomizeTrials();    // randomize the trial order for each participant
+  
+  Target target = getTargetBounds(trials.get(trialNum));
+  bullsEye = new BullsEye(target);
+  
 }
 
 // Updates UI - this method is constantly being called and drawing targets
@@ -75,9 +163,23 @@ void draw()
   // Print trial count
   fill(255);          // set text fill color to white
   text("Trial " + (trialNum + 1) + " of " + trials.size(), 50, 20);    // display what trial the participant is on (the top-left corner)
-
+  
+  // Draw BullsEye
+  bullsEye.display();
+  if ((bullsEye.x!=bullsEye.nx) || (bullsEye.y!=bullsEye.ny)) {
+     bullsEye.move();
+  }
+  
   // Draw targets
   for (int i = 0; i < 16; i++) drawTarget(i);
+  
+  // Draw Arrow pointing to next target
+  if (trialNum != 47) {
+    Target current = getTargetBounds(trials.get(trialNum));
+    Target next = getTargetBounds(trials.get(trialNum+1));
+    if (current.x != next.x || current.y != next.y) arrow(current.x, current.y, next.x, next.y);
+  } 
+  
 }
 
 boolean hasEnded() {
@@ -142,28 +244,6 @@ void printResults(float timeTaken, float penalty)
   saveFrame("results-######.png");    // saves screenshot in current folder
 }
 
-void arrow(float x1, float y1, float x2, float y2) {
-  line(x1, y1, x2, y2);
-  pushMatrix();
-  translate(x2, y2);
-  float a = atan2(x1-x2, y2-y1);
-  rotate(a);
-  line(0, 0, -10, -10);
-  line(0, 0, 10, -10);
-  popMatrix();
-}
-
-/*
-void arrow(int x1, int y1, int x2, int y2) {
-  line(x1, y1, x2, y2);
-  pushMatrix();
-  rotate(atan2(y2-y1, x2-x1));
-  translate(x2, y2);
-  triangle(0, 0, -10, 5, -10, -5);
-  popMatrix();
-}
-*/
-
 // Mouse button was release - lets test to see if hit was in the correct target
 void mouseReleased() {
   if (trialNum >= trials.size()) return;      // if study is over, just return
@@ -175,10 +255,10 @@ void mouseReleased() {
     finishTime = millis();    // save final timestamp
     println("We're done!");
   }
-  
+
   float hit = 0;
   Target target = getTargetBounds(trials.get(trialNum));    // get the location and size for the target in the current trial
-  
+ 
   if (trialNum > 0) {
     Target target2 = getTargetBounds(trials.get(trialNum-1));
     hit = log((dist(target2.x, target2.y, target.x, target.y)/TARGET_SIZE)+1)/log(2);
@@ -189,6 +269,7 @@ void mouseReleased() {
     System.out.println("HIT! " + trialNum + " " + (millis() - startTime));     // success - hit!
     fitts[trialNum] = hit;
     hits++; // increases hits counter 
+    
   }
   
   else {
@@ -198,6 +279,9 @@ void mouseReleased() {
   }
   
   trialNum++;   // move on to the next trial; UI will be updated on the next draw() cycle
+  
+  // set the corrdenates for the next target's bullsEye
+  if (trialNum < 48) bullsEye.setNext(getTargetBounds(trials.get(trialNum)));
 }  
 
 // For a given target ID, returns its location and size
@@ -213,65 +297,48 @@ Target getTargetBounds(int i)
 // This method is called in every draw cycle; you can update the target's UI here
 void drawTarget(int i) {
   Target target = getTargetBounds(i);
-  Target target2 = getTargetBounds(trials.get(trialNum));
+  
+  
+  if (trialNum != 47 && trials.get(trialNum+1) == i) {
+    stroke(255);
+    strokeWeight(3);
+  }
+  
+  fill(60);
+  circle(target.x, target.y, target.w);
   
   if (trials.get(trialNum) == i) { // check whether current circle is the intended target
-    color circle0 = lerpColor(blue, green, 0);
-    color circle1 = lerpColor(blue, green, .33);
-    color circle2 = lerpColor(blue, green, .66);
-    color circle3 = lerpColor(blue, green, 1);
-    color circle4 = lerpColor(green, orange, 0);
-    color circle5 = lerpColor(green, orange, .33);
-    color circle6 = lerpColor(green, orange, .66);
-    color circle7 = lerpColor(green, orange, 1);
-    color circle8 = lerpColor(orange, red, 0);
-    color circle9 = lerpColor(orange, red, .33);
-    color circle10 = lerpColor(orange, red, .66);
-    color circle11 = lerpColor(orange, red, 1);
-    fill(circle0);
-    circle(target.x, target.y, target.w+120);
-    fill(circle1);
-    circle(target.x, target.y, target.w+110);
-    fill(circle2);
-    circle(target.x, target.y, target.w+100);
-    fill(circle3);
-    circle(target.x, target.y, target.w+90);
-    fill(circle4);
-    circle(target.x, target.y, target.w+80);
-    fill(circle5);
-    circle(target.x, target.y, target.w+70);
-    fill(circle6);
-    circle(target.x, target.y, target.w+60);
-    fill(circle7);
-    circle(target.x, target.y, target.w+50);
-    fill(circle8);
-    circle(target.x, target.y, target.w+40);
-    fill(circle9);
-    circle(target.x, target.y, target.w+30);
-    fill(circle10);
-    circle(target.x, target.y, target.w+20);
-    fill(circle11);
-    circle(target.x, target.y, target.w+10);
-    stroke(black);
+    fill(255, 255, 255);
+    stroke(0);
     strokeWeight(3);
-    fill(white);
+    circle(target.x, target.y, target.w);
+    if (trialNum != 47 && trials.get(trialNum+1) == i) {
+      fill(0);
+      textAlign(CENTER, CENTER);
+      text("HIT\nAGAIN", target.x, target.y-0.5);
+    };
+  }
+  
+/*  
+  if (trials.get(trialNum) == i) { // check whether current circle is the intended target
+      fill(255, 255, 255);
     circle(target.x, target.y, target.w);
   }
   
   else if (trialNum != 47 && trials.get(trialNum+1) == i) {
-    stroke(white);
+    stroke(255, 255, 0);
     strokeWeight(3);
     fill(155);
     circle(target.x, target.y, target.w);
-    noStroke();
-    stroke(white);
-    arrow(target2.x, target2.y, target.x, target.y);
+    fill(255, 255, 0);
+    textAlign(CENTER, CENTER);
+    text("NEXT", target.x, target.y-0.5);
   }
 
   else {
     fill(155);
     circle(target.x, target.y, target.w);
   }
-
+*/
   noStroke(); // next targets won't have stroke (unless it is the intended target)
 }
