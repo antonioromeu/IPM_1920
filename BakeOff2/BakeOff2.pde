@@ -178,7 +178,7 @@ void draw() {
     for (int i = 0; i < 16; i++) drawTarget(i);
 
     // Draw Arrow pointing to next target
-    if (trialNum != 47) {
+    if (trialNum != trials.size()-1) {
         Target current = getTargetBounds(trials.get(trialNum));
         Target next = getTargetBounds(trials.get(trialNum + 1));
         if (current.x != next.x || current.y != next.y)
@@ -215,31 +215,31 @@ void randomizeTrials() {
 // Print results at the end of the study
 void printResults(float timeTaken, float penalty) {
     background(0);       // clears screen
-
+    float y = height / 8;
     fill(255);    //set text fill color to white
     text(day() + "/" + month() + "/" + year() + "  " + hour() + ":" + minute() + ":" + second(), 100, 20);   // display time on screen
 
-    text("Finished!", width / 2, height / 2); 
-    text("Hits: " + hits, width / 2, height / 2 + 20);
-    text("Misses: " + misses, width / 2, height / 2 + 40);
-    text("Accuracy: " + (float)hits*100f/(float)(hits+misses) +"%", width / 2, height / 2 + 60);
-    text("Total time taken: " + timeTaken + " sec", width / 2, height / 2 + 80);
-    text("Average time for each target: " + nf((timeTaken)/(float)(hits+misses), 0, 3) + " sec", width / 2, height / 2 + 100);
-    text("Average time for each target + penalty: " + nf(((timeTaken)/(float)(hits+misses) + penalty), 0, 3) + " sec", width / 2, height / 2 + 140);
-    text("Fitts Index of Performance", width / 2, 190);
-    int h = 210;
-    float w = width / 4;
+    text("Finished!", width / 2, y); y += 20;
+    text("Hits: " + hits, width / 2, y); y += 20;
+    text("Misses: " + misses, width / 2, y); y+= 20;
+    text("Accuracy: " + (float)hits*100f/(float)(hits+misses) +"%", width / 2, y); y += 20;
+    text("Total time taken: " + timeTaken + " sec", width / 2, y); y += 20;
+    text("Average time for each target: " + nf((timeTaken)/(float)(hits+misses), 0, 3) + " sec", width / 2, y); y += 20;
+    text("Average time for each target + penalty: " + nf(((timeTaken)/(float)(hits+misses) + penalty), 0, 3) + " sec", width / 2, y); y += 40;
+    text("Fitts Index of Performance", width / 2, y); y += 40;
+    float w = width / 2 - 100;
+    float h = y;
     for (int i = 0; i < 48; i++) {
         if (i == 0)
-            text("Target " + (i+1) + ": " + "---", w, h);
+            text("Target " + (i+1) + ": " + "---", w, y);
         else if (fitts[i] != -1)
-            text("Target " + (i+1) + ": " + fitts[i], w, h);
+            text("Target " + (i+1) + ": " + fitts[i], w, y);
         else
-            text("Target " + (i+1) + ": MISSED", w, h);
-        h += 20;
+            text("Target " + (i+1) + ": MISSED", w, y);
+        y += 20;
         if (i == 23) {
-            h = 210;
-            w += width / 2;
+            y = h;
+            w = width / 2 + 100;
         }
     }
     saveFrame("results-######.png");    // saves screenshot in current folder
@@ -292,7 +292,7 @@ Target getTargetBounds(int i) {
 void drawTarget(int i) {
     Target target = getTargetBounds(i);   // get the location and size for the circle with ID:i
 
-    if (trialNum != 47 && trials.get(trialNum+1) == i) {
+    if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i) {
         stroke(255);
         strokeWeight(3);
     }
@@ -305,7 +305,7 @@ void drawTarget(int i) {
         stroke(0);
         strokeWeight(3);
         circle(target.x, target.y, target.w);
-        if (trialNum != 47 && trials.get(trialNum+1) == i) {
+        if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i) {
             fill(0);
             textAlign(CENTER, CENTER);
             text("HIT\nAGAIN", target.x, target.y-0.5);
