@@ -6,6 +6,7 @@
 // Processing reference: https://processing.org/reference/
 
 import java.util.Collections;
+import processing.sound.*;
 
 // Target properties
 float PPI, PPCM;
@@ -25,6 +26,7 @@ BullsEye bullsEye;
 int time;
 int wait = 50;
 
+SoundFile soundFile;
 
 // Performance variables
 int startTime              = 0;      // time starts when the first click is captured
@@ -46,7 +48,7 @@ class Target {
 
 class BullsEye {
     int x, y, nx, ny, xincrement, yincrement;
-    int frames = 3;
+    int frames = 5;
     float w;
 
     BullsEye(Target target) {
@@ -77,46 +79,6 @@ class BullsEye {
         yincrement = int((ny-y)/frames);
     }
 
-    void display() {
-        color blue = color(0, 128, 255);
-        color green = color(0, 255, 0);
-        color yellow = color(255, 255, 0);
-        color orange = color(255, 128, 0);
-        color red = color(255, 0, 0);
-        color circle1 = lerpColor(blue, red, .33);
-        color circle2 = lerpColor(blue, green, 0);
-        color circle3 = lerpColor(blue, green, .33);
-        color circle4 = lerpColor(blue, green, .66);
-        color circle5 = lerpColor(green, yellow, .33);
-        color circle6 = lerpColor(green, yellow, 1);
-        color circle7 = lerpColor(yellow, orange, .33);
-        color circle8 = lerpColor(yellow, orange, .66);
-        color circle9 = lerpColor(orange, red, 0);
-        color circle10 = lerpColor(orange, red, .33);
-        color circle11 = lerpColor(orange, red, .66);
-        fill(circle1);
-        circle(x, y, w + 77);
-        fill(circle2);
-        circle(x, y, w + 70);
-        fill(circle3);
-        circle(x, y, w + 63);
-        fill(circle4);
-        circle(x, y, w + 56);
-        fill(circle5);
-        circle(x, y, w + 49);
-        fill(circle6);
-        circle(x, y, w + 42);
-        fill(circle7);
-        circle(x, y, w + 35);
-        fill(circle8);
-        circle(x, y, w + 28);
-        fill(circle9);
-        circle(x, y, w + 21);
-        fill(circle10);
-        circle(x, y, w + 14);
-        fill(circle11);
-        circle(x, y, w + 7);
-    }
     void smoothDisplay() {
         color blue = color(0, 128, 255);
         color green = color(0, 255, 0);
@@ -135,27 +97,27 @@ class BullsEye {
         color circle10 = lerpColor(orange, red, .33);
         color circle11 = lerpColor(orange, red, .66);
         fill(circle1);
-        if (millis() - time >= 1*wait) circle(x, y, w + 77);
+        if (millis() - time >= 1*wait) circle(x, y, w + 55);
         fill(circle2);
-        if (millis() - time >= 2*wait) circle(x, y, w + 70);
+        if (millis() - time >= 2*wait) circle(x, y, w + 60);
         fill(circle3);
-        if (millis() - time >= 3*wait) circle(x, y, w + 63);
+        if (millis() - time >= 3*wait) circle(x, y, w + 54);
         fill(circle4);
-        if (millis() - time >= 4*wait) circle(x, y, w + 56);
+        if (millis() - time >= 4*wait) circle(x, y, w + 48);
         fill(circle5);
-        if (millis() - time >= 5*wait) circle(x, y, w + 49);
+        if (millis() - time >= 5*wait) circle(x, y, w + 42);
         fill(circle6);
-        if (millis() - time >= 6*wait) circle(x, y, w + 42);
+        if (millis() - time >= 6*wait) circle(x, y, w + 36);
         fill(circle7);
-        if (millis() - time >= 7*wait) circle(x, y, w + 35);
+        if (millis() - time >= 7*wait) circle(x, y, w + 30);
         fill(circle8);
-        if (millis() - time >= 8*wait) circle(x, y, w + 28);
+        if (millis() - time >= 8*wait) circle(x, y, w + 24);
         fill(circle9);
-        if (millis() - time >= 9*wait) circle(x, y, w + 21);
+        if (millis() - time >= 9*wait) circle(x, y, w + 18);
         fill(circle10);
-        if (millis() - time >= 10*wait) circle(x, y, w + 14);
+        if (millis() - time >= 10*wait) circle(x, y, w + 12);
         fill(circle11);
-        if (millis() - time >= 11*wait) circle(x, y, w + 7);
+        if (millis() - time >= 11*wait) circle(x, y, w + 6);
     }
 }
 
@@ -163,7 +125,7 @@ void arrow(float x1, float y1, float x2, float y2, float w) {
     PVector p = new PVector( x2-x1, y2-y1, 0);
     PVector q = new PVector( x2-x1, y2-y1, 0);
     p.limit(w);
-    q.limit(dist(x1, y1, x2, y2)-(w/2+15));
+    q.limit(dist(x1, y1, x2, y2)-(w/2+20));
     strokeWeight(5);
     stroke(255, 255, 0);
     line(x1+p.x, y1+p.y, x1+q.x, y1+q.y );
@@ -179,7 +141,10 @@ void arrow(float x1, float y1, float x2, float y2, float w) {
 }
 
 // Setup window and vars - runs once
-void setup() {
+void setup() {    
+    soundFile = new SoundFile(this, "Storm.wav");
+    soundFile.play();
+    
     //size(900, 900);              // window size in px (use for debugging)
     fullScreen();                // USE THIS DURING THE BAKEOFF!
   
@@ -206,6 +171,8 @@ void setup() {
     bullsEye = new BullsEye(target);
     
     time = millis();//store the current time
+    
+    cursor(CROSS);
 }
 
 // Updates UI - this method is constantly being called and drawing targets
@@ -219,25 +186,11 @@ void draw() {
     text("Trial " + (trialNum + 1) + " of " + trials.size(), 60, 20);    // display what trial the participant is on (the top-left corner)
     
     // Draw BullsEye
-    if (trialNum != 0) {
-        Target current = getTargetBounds(trials.get(trialNum));
-        Target previous = getTargetBounds(trials.get(trialNum - 1));
-        if (current.x == previous.x && current.y == previous.y)
-            bullsEye.smoothDisplay();
-        /*
-        
-        if (current.x == next.x && current.y == next.y && millis() - time >= wait) {
-            time = millis();//also update the stored time  
-        }
-        else bullsEye.display();*/
-        else bullsEye.display();
-    }
-    else bullsEye.display();
-
+    bullsEye.smoothDisplay();
     // Move BullsEye
     if (bullsEye.x != bullsEye.nx || bullsEye.y != bullsEye.ny)
         bullsEye.move();
-
+        
     // Draw targets
     for (int i = 0; i < 16; i++) drawTarget(i);
 
@@ -261,7 +214,6 @@ boolean hasEnded() {
         printResults(timeTaken, penalty);    // prints study results on-screen
         ended = true;
     }
-    
     return ended;
 }
 
@@ -368,8 +320,8 @@ void drawTarget(int i) {
 
     if (trials.get(trialNum) == i) { // check whether current circle is the intended target
         fill(255, 255, 255);
-        stroke(255,0,0);
-        strokeWeight(3);
+        //stroke(255,0,0);
+        //strokeWeight(3);
         circle(target.x, target.y, target.w);
         fill(0);
         textAlign(CENTER, CENTER);
