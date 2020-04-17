@@ -249,7 +249,7 @@ void printResults(float timeTaken, float penalty) {
         if (i == 0)
             text("Target " + (i+1) + ": " + "---", w, y);
         else if (fitts[i] != -1)
-            text("Target " + (i+1) + ": " + fitts[i], w, y);
+            text("Target " + (i+1) + ": " + nf(fitts[i], 0, 3), w, y);
         else
             text("Target " + (i+1) + ": MISSED", w, y);
         y += 20;
