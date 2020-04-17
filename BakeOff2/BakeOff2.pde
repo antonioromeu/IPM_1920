@@ -22,6 +22,10 @@ float[] fitts              = new float[48];
 
 BullsEye bullsEye;
 
+int time;
+int wait = 500;
+
+
 // Performance variables
 int startTime              = 0;      // time starts when the first click is captured
 int finishTime             = 0;      // records the time of the final click
@@ -91,42 +95,89 @@ class BullsEye {
         color circle10 = lerpColor(orange, red, .66);
         color circle11 = lerpColor(orange, red, 1);
         fill(circle0);
-        circle(x, y, w + 120);
+        circle(x, y, w + 84);
         fill(circle1);
-        circle(x, y, w + 110);
+        circle(x, y, w + 77);
         fill(circle2);
-        circle(x, y, w + 100);
-        fill(circle3);
-        circle(x, y, w + 90);
-        fill(circle4);
-        circle(x, y, w + 80);
-        fill(circle5);
         circle(x, y, w + 70);
+        fill(circle3);
+        circle(x, y, w + 63);
+        fill(circle4);
+        circle(x, y, w + 56);
+        fill(circle5);
+        circle(x, y, w + 49);
         fill(circle6);
-        circle(x, y, w + 60);
+        circle(x, y, w + 42);
         fill(circle7);
-        circle(x, y, w + 50);
+        circle(x, y, w + 35);
         fill(circle8);
-        circle(x, y, w + 40);
+        circle(x, y, w + 28);
         fill(circle9);
-        circle(x, y, w + 30);
+        circle(x, y, w + 21);
         fill(circle10);
-        circle(x, y, w + 20);
+        circle(x, y, w + 14);
         fill(circle11);
-        circle(x, y, w + 10);
+        circle(x, y, w + 7);
+    }
+    void smoothDisplay() {
+        color blue = color(0, 128, 255);
+        color green = color(0, 255, 0);
+        color orange = color(255, 128, 0);
+        color red = color(255, 0, 0);
+        color circle0 = lerpColor(blue, green, 0);
+        color circle1 = lerpColor(blue, green, .33);
+        color circle2 = lerpColor(blue, green, .66);
+        color circle3 = lerpColor(blue, green, 1);
+        color circle4 = lerpColor(green, orange, 0);
+        color circle5 = lerpColor(green, orange, .33);
+        color circle6 = lerpColor(green, orange, .66);
+        color circle7 = lerpColor(green, orange, 1);
+        color circle8 = lerpColor(orange, red, 0);
+        color circle9 = lerpColor(orange, red, .33);
+        color circle10 = lerpColor(orange, red, .66);
+        color circle11 = lerpColor(orange, red, 1);
+        fill(circle0);
+        circle(x, y, w + 84);
+        fill(circle1);
+        circle(x, y, w + 77);
+        fill(circle2);
+        circle(x, y, w + 70);
+        fill(circle3);
+        circle(x, y, w + 63);
+        fill(circle4);
+        circle(x, y, w + 56);
+        fill(circle5);
+        circle(x, y, w + 49);
+        fill(circle6);
+        circle(x, y, w + 42);
+        fill(circle7);
+        circle(x, y, w + 35);
+        fill(circle8);
+        circle(x, y, w + 28);
+        fill(circle9);
+        circle(x, y, w + 21);
+        fill(circle10);
+        circle(x, y, w + 14);
+        fill(circle11);
+        circle(x, y, w + 7);
     }
 }
 
-void arrow(float x1, float y1, float x2, float y2) {
-    strokeWeight(3);
-    stroke(255, 255, 255);
-    line(x1, y1, x2, y2);
+void arrow(float x1, float y1, float x2, float y2, float w) {
+    PVector p = new PVector( x2-x1, y2-y1, 0);
+    PVector q = new PVector( x2-x1, y2-y1, 0);
+    p.limit(w);
+    q.limit(dist(x1, y1, x2, y2)-(w/2+10));
+    strokeWeight(5);
+    stroke(255, 255, 0);
+    line(x1+p.x, y1+p.y, x1+q.x, y1+q.y );
     pushMatrix();
-    translate(x2, y2);
-    float a = atan2(x1-x2, y2-y1);
-    rotate(a);
-    line(0, 0, -10, -10);
-    line(0, 0, 10, -10);
+    translate( x1+q.x, y1+q.y );
+    p.limit(20);
+    rotate(radians(30));
+    line(0, 0, -p.x, -p.y);
+    rotate(radians(-60));
+    line(0, 0, -p.x, -p.y);
     popMatrix();
     noStroke();
 }
@@ -157,6 +208,8 @@ void setup() {
 
     Target target = getTargetBounds(trials.get(trialNum));
     bullsEye = new BullsEye(target);
+    
+    time = millis();//store the current time
 }
 
 // Updates UI - this method is constantly being called and drawing targets
@@ -167,10 +220,26 @@ void draw() {
 
     // Print trial count
     fill(255);          // set text fill color to white
-    text("Trial " + (trialNum + 1) + " of " + trials.size(), 50, 20);    // display what trial the participant is on (the top-left corner)
-
+    text("Trial " + (trialNum + 1) + " of " + trials.size(), 60, 20);    // display what trial the participant is on (the top-left corner)
+    
     // Draw BullsEye
-    bullsEye.display();
+    if (trialNum != trials.size()-1) {
+        Target current = getTargetBounds(trials.get(trialNum));
+        Target next = getTargetBounds(trials.get(trialNum + 1));
+        time = millis();//also update the stored time
+        if (current.x == next.x && current.y == next.y)
+            bullsEye.smoothDisplay();
+        /*
+        
+        if (current.x == next.x && current.y == next.y && millis() - time >= wait) {
+            time = millis();//also update the stored time  
+        }
+        else bullsEye.display();*/
+        else bullsEye.display();
+    }
+    else bullsEye.display();
+
+    // Move BullsEye
     if (bullsEye.x != bullsEye.nx || bullsEye.y != bullsEye.ny)
         bullsEye.move();
 
@@ -182,7 +251,7 @@ void draw() {
         Target current = getTargetBounds(trials.get(trialNum));
         Target next = getTargetBounds(trials.get(trialNum + 1));
         if (current.x != next.x || current.y != next.y)
-            arrow(current.x, current.y, next.x, next.y);
+            arrow(current.x, current.y, next.x, next.y, current.w);
     }
 }
 
@@ -292,24 +361,27 @@ Target getTargetBounds(int i) {
 void drawTarget(int i) {
     Target target = getTargetBounds(i);   // get the location and size for the circle with ID:i
 
-    if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i) {
-        stroke(255);
-        strokeWeight(3);
+    if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i && trials.get(trialNum) != i) {
+        stroke(255, 255, 0);
+        strokeWeight(5);
     }
 
     fill(60);
     circle(target.x, target.y, target.w);
 
-    if (trials.get(trialNum) == i) { // check whether current circle is the intended t
+    if (trials.get(trialNum) == i) { // check whether current circle is the intended target
         fill(255, 255, 255);
-        stroke(0);
+        stroke(255,0,0);
         strokeWeight(3);
         circle(target.x, target.y, target.w);
-        if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i) {
-            fill(0);
-            textAlign(CENTER, CENTER);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        textSize(20);
+        if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i)
             text("HIT\nAGAIN", target.x, target.y-0.5);
-        };
+        else
+            text("HIT\nME", target.x, target.y-0.5);
+        
     }
     
     noStroke();    // next targets won't have stroke (unless it is the intended target)
