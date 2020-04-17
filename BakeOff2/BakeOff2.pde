@@ -23,7 +23,7 @@ float[] fitts              = new float[48];
 BullsEye bullsEye;
 
 int time;
-int wait = 500;
+int wait = 50;
 
 
 // Performance variables
@@ -80,22 +80,20 @@ class BullsEye {
     void display() {
         color blue = color(0, 128, 255);
         color green = color(0, 255, 0);
+        color yellow = color(255, 255, 0);
         color orange = color(255, 128, 0);
         color red = color(255, 0, 0);
-        color circle0 = lerpColor(blue, green, 0);
-        color circle1 = lerpColor(blue, green, .33);
-        color circle2 = lerpColor(blue, green, .66);
-        color circle3 = lerpColor(blue, green, 1);
-        color circle4 = lerpColor(green, orange, 0);
-        color circle5 = lerpColor(green, orange, .33);
-        color circle6 = lerpColor(green, orange, .66);
-        color circle7 = lerpColor(green, orange, 1);
-        color circle8 = lerpColor(orange, red, 0);
-        color circle9 = lerpColor(orange, red, .33);
-        color circle10 = lerpColor(orange, red, .66);
-        color circle11 = lerpColor(orange, red, 1);
-        fill(circle0);
-        circle(x, y, w + 84);
+        color circle1 = lerpColor(blue, red, .33);
+        color circle2 = lerpColor(blue, green, 0);
+        color circle3 = lerpColor(blue, green, .33);
+        color circle4 = lerpColor(blue, green, .66);
+        color circle5 = lerpColor(green, yellow, .33);
+        color circle6 = lerpColor(green, yellow, 1);
+        color circle7 = lerpColor(yellow, orange, .33);
+        color circle8 = lerpColor(yellow, orange, .66);
+        color circle9 = lerpColor(orange, red, 0);
+        color circle10 = lerpColor(orange, red, .33);
+        color circle11 = lerpColor(orange, red, .66);
         fill(circle1);
         circle(x, y, w + 77);
         fill(circle2);
@@ -122,44 +120,42 @@ class BullsEye {
     void smoothDisplay() {
         color blue = color(0, 128, 255);
         color green = color(0, 255, 0);
+        color yellow = color(255, 255, 0);
         color orange = color(255, 128, 0);
         color red = color(255, 0, 0);
-        color circle0 = lerpColor(blue, green, 0);
-        color circle1 = lerpColor(blue, green, .33);
-        color circle2 = lerpColor(blue, green, .66);
-        color circle3 = lerpColor(blue, green, 1);
-        color circle4 = lerpColor(green, orange, 0);
-        color circle5 = lerpColor(green, orange, .33);
-        color circle6 = lerpColor(green, orange, .66);
-        color circle7 = lerpColor(green, orange, 1);
-        color circle8 = lerpColor(orange, red, 0);
-        color circle9 = lerpColor(orange, red, .33);
-        color circle10 = lerpColor(orange, red, .66);
-        color circle11 = lerpColor(orange, red, 1);
-        fill(circle0);
-        circle(x, y, w + 84);
+        color circle1 = lerpColor(blue, red, .33);
+        color circle2 = lerpColor(blue, green, 0);
+        color circle3 = lerpColor(blue, green, .33);
+        color circle4 = lerpColor(blue, green, .66);
+        color circle5 = lerpColor(green, yellow, .33);
+        color circle6 = lerpColor(green, yellow, 1);
+        color circle7 = lerpColor(yellow, orange, .33);
+        color circle8 = lerpColor(yellow, orange, .66);
+        color circle9 = lerpColor(orange, red, 0);
+        color circle10 = lerpColor(orange, red, .33);
+        color circle11 = lerpColor(orange, red, .66);
         fill(circle1);
-        circle(x, y, w + 77);
+        if (millis() - time >= 1*wait) circle(x, y, w + 77);
         fill(circle2);
-        circle(x, y, w + 70);
+        if (millis() - time >= 2*wait) circle(x, y, w + 70);
         fill(circle3);
-        circle(x, y, w + 63);
+        if (millis() - time >= 3*wait) circle(x, y, w + 63);
         fill(circle4);
-        circle(x, y, w + 56);
+        if (millis() - time >= 4*wait) circle(x, y, w + 56);
         fill(circle5);
-        circle(x, y, w + 49);
+        if (millis() - time >= 5*wait) circle(x, y, w + 49);
         fill(circle6);
-        circle(x, y, w + 42);
+        if (millis() - time >= 6*wait) circle(x, y, w + 42);
         fill(circle7);
-        circle(x, y, w + 35);
+        if (millis() - time >= 7*wait) circle(x, y, w + 35);
         fill(circle8);
-        circle(x, y, w + 28);
+        if (millis() - time >= 8*wait) circle(x, y, w + 28);
         fill(circle9);
-        circle(x, y, w + 21);
+        if (millis() - time >= 9*wait) circle(x, y, w + 21);
         fill(circle10);
-        circle(x, y, w + 14);
+        if (millis() - time >= 10*wait) circle(x, y, w + 14);
         fill(circle11);
-        circle(x, y, w + 7);
+        if (millis() - time >= 11*wait) circle(x, y, w + 7);
     }
 }
 
@@ -167,7 +163,7 @@ void arrow(float x1, float y1, float x2, float y2, float w) {
     PVector p = new PVector( x2-x1, y2-y1, 0);
     PVector q = new PVector( x2-x1, y2-y1, 0);
     p.limit(w);
-    q.limit(dist(x1, y1, x2, y2)-(w/2+10));
+    q.limit(dist(x1, y1, x2, y2)-(w/2+15));
     strokeWeight(5);
     stroke(255, 255, 0);
     line(x1+p.x, y1+p.y, x1+q.x, y1+q.y );
@@ -223,11 +219,10 @@ void draw() {
     text("Trial " + (trialNum + 1) + " of " + trials.size(), 60, 20);    // display what trial the participant is on (the top-left corner)
     
     // Draw BullsEye
-    if (trialNum != trials.size()-1) {
+    if (trialNum != 0) {
         Target current = getTargetBounds(trials.get(trialNum));
-        Target next = getTargetBounds(trials.get(trialNum + 1));
-        time = millis();//also update the stored time
-        if (current.x == next.x && current.y == next.y)
+        Target previous = getTargetBounds(trials.get(trialNum - 1));
+        if (current.x == previous.x && current.y == previous.y)
             bullsEye.smoothDisplay();
         /*
         
@@ -316,6 +311,8 @@ void printResults(float timeTaken, float penalty) {
 
 // Mouse button was released - lets test to see if hit was in the correct target
 void mouseReleased() {
+    time = millis();//also update the stored time
+    
     if (trialNum >= trials.size()) return;      // if study is over, just return
     if (trialNum == 0) startTime = millis();    // check if first click, if so, start timer
     if (trialNum == trials.size() - 1) {        // check if final click
@@ -377,7 +374,7 @@ void drawTarget(int i) {
         fill(0);
         textAlign(CENTER, CENTER);
         textSize(20);
-        if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i)
+        if (trialNum != 0 && trials.get(trialNum-1) == i)
             text("HIT\nAGAIN", target.x, target.y-0.5);
         else
             text("HIT\nME", target.x, target.y-0.5);
