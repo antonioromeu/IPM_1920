@@ -28,6 +28,9 @@ int wait = 50;
 
 SoundFile soundFile;
 
+PFont arialBlack;
+PFont defaultFont;
+
 // Performance variables
 int startTime              = 0;      // time starts when the first click is captured
 int finishTime             = 0;      // records the time of the final click
@@ -96,37 +99,43 @@ class BullsEye {
         color circle9 = lerpColor(orange, red, 0);
         color circle10 = lerpColor(orange, red, .33);
         color circle11 = lerpColor(orange, red, .66);
+        stroke(yellow);
+        strokeWeight(4);
         fill(circle1);
-        if (millis() - time >= 1*wait) circle(x, y, w + 55);
+        circle(x, y, w);
+        noStroke();
+        
+        fill(circle1);
+        if (millis() - time >= wait) circle(x, y, w - 10);
         fill(circle2);
-        if (millis() - time >= 2*wait) circle(x, y, w + 60);
+        if (millis() - time >= 2*wait) circle(x, y, w - 16);
         fill(circle3);
-        if (millis() - time >= 3*wait) circle(x, y, w + 54);
+        if (millis() - time >= 3*wait) circle(x, y, w - 22);
         fill(circle4);
-        if (millis() - time >= 4*wait) circle(x, y, w + 48);
+        if (millis() - time >= 4*wait) circle(x, y, w - 28);
         fill(circle5);
-        if (millis() - time >= 5*wait) circle(x, y, w + 42);
+        if (millis() - time >= 5*wait) circle(x, y, w - 34);
         fill(circle6);
-        if (millis() - time >= 6*wait) circle(x, y, w + 36);
+        if (millis() - time >= 6*wait) circle(x, y, w - 40);
         fill(circle7);
-        if (millis() - time >= 7*wait) circle(x, y, w + 30);
+        if (millis() - time >= 7*wait) circle(x, y, w - 46);
         fill(circle8);
-        if (millis() - time >= 8*wait) circle(x, y, w + 24);
+        if (millis() - time >= 8*wait) circle(x, y, w - 52);
         fill(circle9);
-        if (millis() - time >= 9*wait) circle(x, y, w + 18);
+        if (millis() - time >= 9*wait) circle(x, y, w - 58);
         fill(circle10);
-        if (millis() - time >= 10*wait) circle(x, y, w + 12);
+        if (millis() - time >= 10*wait) circle(x, y, w - 64);
         fill(circle11);
-        if (millis() - time >= 11*wait) circle(x, y, w + 6);
+        if (millis() - time >= 11*wait) circle(x, y, w - 70);
     }
 }
 
 void arrow(float x1, float y1, float x2, float y2, float w) {
     PVector p = new PVector( x2-x1, y2-y1, 0);
     PVector q = new PVector( x2-x1, y2-y1, 0);
-    p.limit(w);
+    p.limit(w-(w/2-20));
     q.limit(dist(x1, y1, x2, y2)-(w/2+20));
-    strokeWeight(5);
+    strokeWeight(4);
     stroke(255, 255, 0);
     line(x1+p.x, y1+p.y, x1+q.x, y1+q.y );
     pushMatrix();
@@ -144,6 +153,7 @@ void arrow(float x1, float y1, float x2, float y2, float w) {
 void setup() {    
     soundFile = new SoundFile(this, "Storm.wav");
     soundFile.play();
+    soundFile.amp(0.2);
     
     //size(900, 900);              // window size in px (use for debugging)
     fullScreen();                // USE THIS DURING THE BAKEOFF!
@@ -162,7 +172,8 @@ void setup() {
     frameRate(60);     // set frame rate
 
     // Text and font setup
-    textFont(createFont("Arial", 16));    // sets the font to Arial size 16
+    defaultFont = createFont("Arial", 16);
+    textFont(defaultFont);    // sets the font to Arial size 16
     textAlign(CENTER);                    // align text
   
     randomizeTrials();    // randomize the trial order for each participant
@@ -173,34 +184,43 @@ void setup() {
     time = millis();//store the current time
     
     cursor(CROSS);
+    
+    arialBlack = createFont("Arial Black", 16);
 }
 
 // Updates UI - this method is constantly being called and drawing targets
 void draw() {
     if (hasEnded()) return; // nothing else to do; study is over
+    
+    Target current = getTargetBounds(trials.get(trialNum));
 
     background(0);       // set background to black
 
     // Print trial count
     fill(255);          // set text fill color to white
     text("Trial " + (trialNum + 1) + " of " + trials.size(), 60, 20);    // display what trial the participant is on (the top-left corner)
+        
+    // Draw targets
+    for (int i = 0; i < 16; i++) drawTarget(i);
     
     // Draw BullsEye
     bullsEye.smoothDisplay();
     // Move BullsEye
     if (bullsEye.x != bullsEye.nx || bullsEye.y != bullsEye.ny)
         bullsEye.move();
-        
-    // Draw targets
-    for (int i = 0; i < 16; i++) drawTarget(i);
-
+    
     // Draw Arrow pointing to next target
     if (trialNum != trials.size()-1) {
-        Target current = getTargetBounds(trials.get(trialNum));
         Target next = getTargetBounds(trials.get(trialNum + 1));
         if (current.x != next.x || current.y != next.y)
             arrow(current.x, current.y, next.x, next.y, current.w);
     }
+    
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textFont(arialBlack);
+    text("HIT", current.x, current.y - 12); text("ME", current.x, current.y + 7);
+    textFont(defaultFont);
 }
 
 boolean hasEnded() {
@@ -310,28 +330,13 @@ Target getTargetBounds(int i) {
 void drawTarget(int i) {
     Target target = getTargetBounds(i);   // get the location and size for the circle with ID:i
 
-    if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i && trials.get(trialNum) != i) {
+    if (trialNum != trials.size()-1 && trials.get(trialNum+1) == i) {
         stroke(255, 255, 0);
-        strokeWeight(5);
+        strokeWeight(4);
     }
 
     fill(60);
     circle(target.x, target.y, target.w);
-
-    if (trials.get(trialNum) == i) { // check whether current circle is the intended target
-        fill(255, 255, 255);
-        //stroke(255,0,0);
-        //strokeWeight(3);
-        circle(target.x, target.y, target.w);
-        fill(0);
-        textAlign(CENTER, CENTER);
-        textSize(20);
-        if (trialNum != 0 && trials.get(trialNum-1) == i)
-            text("HIT\nAGAIN", target.x, target.y-0.5);
-        else
-            text("HIT\nME", target.x, target.y-0.5);
-        
-    }
     
     noStroke();    // next targets won't have stroke (unless it is the intended target)
 }
