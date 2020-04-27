@@ -5,6 +5,7 @@
 // Processing reference: https://processing.org/reference/
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
@@ -47,6 +48,43 @@ float errorsTotal          = 0;     // a running total of the number of errors (
 
 float iHeight;
 float iWidth;
+int nButtons = 9;
+ArrayList<Button> buttonsArray = new ArrayList<Button>();
+String[] alphabet = {"<_", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+float keyTimer = 0;
+
+Button lastButton;
+
+class Button {
+    float x, y, w, h;
+    String txt;
+    int index;
+    int currentChar = 0;
+
+    Button(float X, float Y, float W, float H, int buttonIndex) {
+        x = X;
+        y = Y;
+        w = W;
+        h = H;
+        index = buttonIndex;
+        txt = alphabet[buttonIndex];
+    }
+    
+    void display() {
+        noFill();
+        stroke(0);
+        rect(x, y, w, h);
+        fill(0);
+        text(txt, x + w/2, y + h/2);
+    }
+    
+    char getCurrentChar() {
+        char c = txt.charAt(currentChar);
+        currentChar = (currentChar + 1) % txt.length();
+        return c;
+    }
+    
+}
 
 //Setup window and vars - runs once
 void setup() {
@@ -78,6 +116,14 @@ void setup() {
     ARROW_SIZE = (int)(2.2 * PPCM);
     iHeight = 3.0*PPCM;
     iWidth = 4.0*PPCM;
+    
+
+    int k = 0;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/3, height/2 - 1.0*PPCM + (i*iHeight)/3, (iWidth)/3, (iHeight)/3, k++));          
+        }
+    }
 }
 
 void draw() { 
@@ -130,32 +176,28 @@ void draw() {
         stroke(0, 255, 0);
         noFill();
         rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
-        
+          
         // Write current letter
         textAlign(CENTER);
         fill(0);
         text("" + currentLetter, width/2, height/2 - 1.3 * PPCM);             // draw current letter
         noFill();
         
-        String[] alfabeto = {"<_", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
-        int k = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                stroke(0);
-                rect(width/2 - 2.0*PPCM + (j*iWidth)/3, height/2 - 1.0*PPCM + (i*iHeight)/3, (iWidth)/3, (iHeight)/3);
-                textAlign(CENTER, CENTER);
-                text(alfabeto[k++], width/2 - 2.0*PPCM + (j*iWidth)/3 + iWidth/6, height/2 - 1.0*PPCM + (i*iHeight)/3 + iHeight/6);
-            }
+        for (int i = 0; i < nButtons; i++) {
+            textAlign(CENTER, CENTER);
+            buttonsArray.get(i).display();
         }
         
-        
-        // Draw next and previous arrows
-        /*
-        noFill();
-        imageMode(CORNER);
-        image(leftArrow, width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE); 
-        image(rightArrow, width/2, height/2, ARROW_SIZE, ARROW_SIZE);
-        */
+    }
+    
+    if(keyTimer > 0 && (millis()-keyTimer)/1000 > 2){
+        currentTyped += currentLetter;
+        keyTimer = 0;
+        currentLetter = '|';
+        for(int i = 0; i < nButtons;i++){
+            Button button = buttonsArray.get(i);
+            button.currentChar = 0;
+        }
     }
   
     // Draw the user finger to illustrate the issues with occlusion (the fat finger problem)
@@ -172,11 +214,28 @@ void mousePressed() {
     if (didMouseClick(width/2 - 2*PPCM, 170, 4.0*PPCM, 2.0*PPCM)) nextTrial();                         // Test click on 'accept' button - do not change this!
     else if (didMouseClick(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)) {  // Test click on 'keyboard' area - do not change this condition! 
         // YOUR KEYBOARD IMPLEMENTATION NEEDS TO BE IN HERE! (inside the condition)
+        
+        
+        for (int i = 0; i < nButtons; i++) {
+            Button button = buttonsArray.get(i);
+            if (didMouseClick(button.x, button.y, button.w, button.h)) {
+                currentLetter = button.getCurrentChar();
+                keyTimer = millis();
+            }
+        }
+    }
+            
+                   
+                
+          
+        /*
         if (didMouseClick(width/2 - 2.0*PPCM + (1*iWidth)/3, height/2 - 1.0*PPCM + (1*iHeight)/3, (iWidth)/3, (iHeight)/3)) {
             currentLetter = abc[0];
             lastCharacter = currentLetter;
         }
-        // Test click on left arrow
+        
+        */
+/*        // Test click on left arrow
         if (didMouseClick(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE)) {
             currentLetter--;
             if (currentLetter < '_') currentLetter = 'z';                  // wrap around to z
@@ -193,8 +252,9 @@ void mousePressed() {
                 currentTyped = currentTyped.substring(0, currentTyped.length() - 1);
             else if (currentLetter != '`') currentTyped += currentLetter;  // if not any of the above cases, add the current letter to the typed string
         }
-    }
-    else System.out.println("debug: CLICK NOT ACCEPTED");
+       
+    }*/
+    //else System.out.println("debug: CLICK NOT ACCEPTED");
 }
 
 
