@@ -33,10 +33,12 @@ int NUM_REPEATS            = 2;     // the total number of phrases to be tested
 int currTrialNum           = 0;     // the current trial number (indexes into phrases array above)
 String currentPhrase       = "";    // the current target phrase
 String currentTyped        = "";    // what the user has typed so far
-char currentLetter         = 'a';
-char[] abc                 = {'a', 'b', 'c'};
-char lastCharacter;
+char currentLetter         = '|';
+int lastButton             = -1;
+int currentButton          = -1;
+String currentWord         = "";
 float time                 = 0;
+float timeInterval        = 1000; //1 second
 
 // Performance variables
 float startTime            = 0;     // time starts when the user clicks for the first time
@@ -48,12 +50,10 @@ float errorsTotal          = 0;     // a running total of the number of errors (
 
 float iHeight;
 float iWidth;
-int nButtons = 9;
+int nButtons = 10;
 ArrayList<Button> buttonsArray = new ArrayList<Button>();
-String[] alphabet = {"<_", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+String[] alphabet = {"<", "_", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
 float keyTimer = 0;
-
-Button lastButton;
 
 class Button {
     float x, y, w, h;
@@ -79,11 +79,16 @@ class Button {
     }
     
     char getCurrentChar() {
-        char c = txt.charAt(currentChar);
-        currentChar = (currentChar + 1) % txt.length();
-        return c;
+        return txt.charAt(currentChar);
     }
     
+    void advanceChar() {
+        currentChar = (currentChar + 1) % txt.length();
+    }
+    
+    void reset() {
+        currentChar = 0;
+    }
 }
 
 //Setup window and vars - runs once
@@ -119,7 +124,10 @@ void setup() {
     
 
     int k = 0;
-    for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 4; j++) {
+        buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/4, height/2 - 1.0*PPCM, (iWidth)/4, (iHeight)/3, k++)); 
+    }
+    for (int i = 1; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/3, height/2 - 1.0*PPCM + (i*iHeight)/3, (iWidth)/3, (iHeight)/3, k++));          
         }
@@ -190,14 +198,18 @@ void draw() {
         
     }
     
-    if(keyTimer > 0 && (millis()-keyTimer)/1000 > 2){
+    if (lastButton != -1 && currentButton != lastButton && timeInterval > (millis()-keyTimer)) {
         currentTyped += currentLetter;
+        buttonsArray.get(lastButton).reset();
+        keyTimer = 0;
+    }
+    else if (keyTimer > 0 && (millis()-keyTimer) > timeInterval) {
+        if (currentLetter != '|') {
+            currentTyped += currentLetter;
+            if (lastButton != -1)  buttonsArray.get(lastButton).reset();
+        }
         keyTimer = 0;
         currentLetter = '|';
-        for(int i = 0; i < nButtons;i++){
-            Button button = buttonsArray.get(i);
-            button.currentChar = 0;
-        }
     }
   
     // Draw the user finger to illustrate the issues with occlusion (the fat finger problem)
@@ -214,14 +226,22 @@ void mousePressed() {
     if (didMouseClick(width/2 - 2*PPCM, 170, 4.0*PPCM, 2.0*PPCM)) nextTrial();                         // Test click on 'accept' button - do not change this!
     else if (didMouseClick(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)) {  // Test click on 'keyboard' area - do not change this condition! 
         // YOUR KEYBOARD IMPLEMENTATION NEEDS TO BE IN HERE! (inside the condition)
-        
-        
-        for (int i = 0; i < nButtons; i++) {
-            Button button = buttonsArray.get(i);
-            if (didMouseClick(button.x, button.y, button.w, button.h)) {
-                currentLetter = button.getCurrentChar();
-                keyTimer = millis();
+        if (startTime != 0) {
+            
+            keyTimer = millis();
+            for (int i = 0; i < nButtons; i++) {
+                Button button = buttonsArray.get(i);
+                if (didMouseClick(button.x, button.y, button.w, button.h)) {
+                    lastButton = currentButton;
+                    currentButton = button.index;
+                    currentLetter = button.getCurrentChar();
+                    if (lastButton == currentButton) {
+                        button.advanceChar();
+                    }
+                    
+                }
             }
+            
         }
     }
             
