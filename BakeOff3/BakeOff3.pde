@@ -8,6 +8,12 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
+import java.util.Map;
+import java.util.Vector;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 // Screen resolution vars;
 float PPI, PPCM;
@@ -33,12 +39,12 @@ int NUM_REPEATS            = 2;     // the total number of phrases to be tested
 int currTrialNum           = 0;     // the current trial number (indexes into phrases array above)
 String currentPhrase       = "";    // the current target phrase
 String currentTyped        = "";    // what the user has typed so far
-char currentLetter         = '\0';
+char currentLetter         = '|';
 String currentWord         = "";
 int lastButton             = -1;
 int currentButton          = -1;
 float time                 = 0;
-float timeInterval        = 1000; //1 second
+float timeInterval         = 1000; //1 second
 
 // Performance variables
 float startTime            = 0;     // time starts when the user clicks for the first time
@@ -50,10 +56,13 @@ float errorsTotal          = 0;     // a running total of the number of errors (
 
 float iHeight;
 float iWidth;
-int nButtons = 10;
+int nButtons = 11;
 ArrayList<Button> buttonsArray = new ArrayList<Button>();
-String[] alphabet = {"<", "_", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+String[] alphabet = {"<", "_", "abc", "def", ">", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
 float keyTimer = 0;
+
+String[] words;
+String possibleWord         = "";
 
 class Button {
     float x, y, w, h;
@@ -124,14 +133,15 @@ void setup() {
     
 
     int k = 0;
-    for (int j = 0; j < 4; j++) {
-        buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/4, height/2 - 1.0*PPCM, (iWidth)/4, (iHeight)/3, k++)); 
-    }
-    for (int i = 1; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/3, height/2 - 1.0*PPCM + (i*iHeight)/3, (iWidth)/3, (iHeight)/3, k++));          
-        }
-    }
+    
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 4; j++)
+            buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/4, height/2 - 1.0*PPCM + (i*iHeight)/3, (iWidth)/4, (iHeight)/3, k++));          
+    
+    for (int j = 0; j < 3; j++)
+        buttonsArray.add(new Button(width/2 - 2.0*PPCM + (j*iWidth)/3, height/2 - 1.0*PPCM + 2*iHeight/3, (iWidth)/3, (iHeight)/3, k++)); 
+    
+    words = loadStrings("words.txt");
 }
 
 void draw() { 
@@ -183,10 +193,11 @@ void draw() {
                           T E X T    A R E A 
         =============================================================*/
 
-        if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != '\0') {
+        if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != '|') {
              buttonsArray.get(currentButton).resetChar();
              currentWord += currentLetter;
-             currentLetter = '\0';        
+             verifyWord();
+             currentLetter = '|';        
         }
         
         textAlign(LEFT);
@@ -197,9 +208,13 @@ void draw() {
         text("Entered:  " + currentTyped + currentWord + "|", width/2 - 4.0*PPCM, 140);                      // draw what the user has entered thus far 
           
         // Write current letter
-        textAlign(CENTER);
+        float w = textWidth(possibleWord);
+        textAlign(CENTER, BOTTOM);
+        fill(100);
+        text(possibleWord, width/2, height/2 - 1.2 * PPCM);
         fill(0);
-        text(currentWord + currentLetter, width/2, height/2 - 1.3 * PPCM);             // draw current letter
+        if (possibleWord != "") textAlign(LEFT, BOTTOM);
+        text(currentWord + currentLetter, width/2 - w/2, height/2 - 1.2 * PPCM);             // draw current letter
         noFill();
         
         /*===========================================================*/
@@ -209,8 +224,6 @@ void draw() {
             buttonsArray.get(i).display();
         }
     }
-    
-
   
     // Draw the user finger to illustrate the issues with occlusion (the fat finger problem)
     imageMode(CORNER);
@@ -222,6 +235,14 @@ boolean didMouseClick(float x, float y, float w, float h) {
     return (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h);
 }
 
+void verifyWord() {
+    for (String word : words)
+        if (word.indexOf(currentWord) == 0) {
+            possibleWord = word;
+            break;
+        }
+}
+
 void mousePressed() {
     if (didMouseClick(width/2 - 2*PPCM, 170, 4.0*PPCM, 2.0*PPCM)) nextTrial();                         // Test click on 'accept' button - do not change this!
     else if (didMouseClick(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)) {  // Test click on 'keyboard' area - do not change this condition! 
@@ -231,13 +252,17 @@ void mousePressed() {
           
             // IF KEYS WITH LETTERS ARE PRESSED...
             for (int i = 2; i < nButtons; i++) {
+                if (i == 4) continue;
                 button = buttonsArray.get(i);
                 if (didMouseClick(button.x, button.y, button.w, button.h)) {
                     lastButton = currentButton;
                     currentButton = button.index;
 
                     if (lastButton != currentButton) {
-                        if (currentLetter != '\0') currentWord += currentLetter;
+                        if (currentLetter != '|') {
+                            currentWord += currentLetter;
+                            verifyWord();
+                        }
                         if (lastButton != -1) buttonsArray.get(lastButton).resetChar();
                         currentLetter = button.getCurrentChar();
                         keyTimer = millis();
@@ -255,12 +280,13 @@ void mousePressed() {
             //if SPACEBAR is pressed...
             button = buttonsArray.get(1);
             if (didMouseClick(button.x, button.y, button.w, button.h)) {
-                if (currentLetter != '\0') {
+                if (currentLetter != '|') {
                     currentWord += currentLetter;
-                    currentLetter = '\0';
+                    currentLetter = '|';
                 }
                 currentTyped += currentWord + ' ';
                 currentWord = "";
+                possibleWord = currentWord;
             }
             
             //if BACKSPACE is pressed...
@@ -269,11 +295,9 @@ void mousePressed() {
                   String[] words;
                   String word;
                   int len;
-                  if  (currentLetter != '\0') currentLetter = '\0';
+                  if  (currentLetter != '|') currentLetter = '|';
                   else if (currentWord.length() != 0) {
                       len = currentWord.length();
-                      //if (currentWord.length() == 0) {print("WOW"); currentWord = "";}
-                      //else 
                       currentWord = currentWord.substring(0, len-1);
                   }
                   else if (currentTyped.length() != 0) {
@@ -287,7 +311,14 @@ void mousePressed() {
                               currentTyped = currentTyped.substring(0, len-1 - word.length());
                           }
                       }
-                  } 
+                  }
+                  possibleWord = "";
+            }
+            
+            button = buttonsArray.get(4);
+            if (didMouseClick(button.x, button.y, button.w, button.h)) {
+                currentWord = possibleWord;
+                currentLetter = '|';
             }
         }
     }
