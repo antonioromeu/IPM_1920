@@ -33,10 +33,10 @@ int NUM_REPEATS            = 2;     // the total number of phrases to be tested
 int currTrialNum           = 0;     // the current trial number (indexes into phrases array above)
 String currentPhrase       = "";    // the current target phrase
 String currentTyped        = "";    // what the user has typed so far
-char currentLetter         = '|';
+char currentLetter         = '\0';
+String currentWord         = "";
 int lastButton             = -1;
 int currentButton          = -1;
-String currentWord         = "";
 float time                 = 0;
 float timeInterval        = 1000; //1 second
 
@@ -86,7 +86,7 @@ class Button {
         currentChar = (currentChar + 1) % txt.length();
     }
     
-    void reset() {
+    void resetChar() {
         currentChar = 0;
     }
 }
@@ -154,12 +154,6 @@ void draw() {
   
     // Check if we are in the middle of a trial
     else if (startTime != 0) {
-        textAlign(LEFT);
-        fill(100);
-        text("Phrase " + (currTrialNum + 1) + " of " + NUM_REPEATS, width/2 - 4.0*PPCM, 50);   // write the trial count
-        text("Target:    " + currentPhrase, width/2 - 4.0*PPCM, 100);                           // draw the target string
-        fill(0);
-        text("Entered:  " + currentTyped + "|", width/2 - 4.0*PPCM, 140);                      // draw what the user has entered thus far 
         
         // Draw very basic ACCEPT button - do not change this!
         textAlign(CENTER);
@@ -184,33 +178,39 @@ void draw() {
         stroke(0, 255, 0);
         noFill();
         rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
+        
+        /*=============================================================
+                          T E X T    A R E A 
+        =============================================================*/
+
+        if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != '\0') {
+             buttonsArray.get(currentButton).resetChar();
+             currentWord += currentLetter;
+             currentLetter = '\0';        
+        }
+        
+        textAlign(LEFT);
+        fill(100);
+        text("Phrase " + (currTrialNum + 1) + " of " + NUM_REPEATS, width/2 - 4.0*PPCM, 50);   // write the trial count
+        text("Target:    " + currentPhrase, width/2 - 4.0*PPCM, 100);                           // draw the target string
+        fill(0);
+        text("Entered:  " + currentTyped + currentWord + "|", width/2 - 4.0*PPCM, 140);                      // draw what the user has entered thus far 
           
         // Write current letter
         textAlign(CENTER);
         fill(0);
-        text("" + currentLetter, width/2, height/2 - 1.3 * PPCM);             // draw current letter
+        text(currentWord + currentLetter, width/2, height/2 - 1.3 * PPCM);             // draw current letter
         noFill();
+        
+        /*===========================================================*/
         
         for (int i = 0; i < nButtons; i++) {
             textAlign(CENTER, CENTER);
             buttonsArray.get(i).display();
         }
-        
     }
     
-    if (lastButton != -1 && currentButton != lastButton && timeInterval > (millis()-keyTimer)) {
-        currentTyped += currentLetter;
-        buttonsArray.get(lastButton).reset();
-        keyTimer = 0;
-    }
-    else if (keyTimer > 0 && (millis()-keyTimer) > timeInterval) {
-        if (currentLetter != '|') {
-            currentTyped += currentLetter;
-            if (lastButton != -1)  buttonsArray.get(lastButton).reset();
-        }
-        keyTimer = 0;
-        currentLetter = '|';
-    }
+
   
     // Draw the user finger to illustrate the issues with occlusion (the fat finger problem)
     imageMode(CORNER);
@@ -227,54 +227,70 @@ void mousePressed() {
     else if (didMouseClick(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM)) {  // Test click on 'keyboard' area - do not change this condition! 
         // YOUR KEYBOARD IMPLEMENTATION NEEDS TO BE IN HERE! (inside the condition)
         if (startTime != 0) {
-            
-            keyTimer = millis();
-            for (int i = 0; i < nButtons; i++) {
-                Button button = buttonsArray.get(i);
+            Button button;
+          
+            // IF KEYS WITH LETTERS ARE PRESSED...
+            for (int i = 2; i < nButtons; i++) {
+                button = buttonsArray.get(i);
                 if (didMouseClick(button.x, button.y, button.w, button.h)) {
                     lastButton = currentButton;
                     currentButton = button.index;
-                    currentLetter = button.getCurrentChar();
-                    if (lastButton == currentButton) {
-                        button.advanceChar();
+
+                    if (lastButton != currentButton) {
+                        if (currentLetter != '\0') currentWord += currentLetter;
+                        if (lastButton != -1) buttonsArray.get(lastButton).resetChar();
+                        currentLetter = button.getCurrentChar();
+                        keyTimer = millis();
                     }
                     
+                    else if (lastButton == currentButton) {
+                        if (millis()-keyTimer < timeInterval) button.advanceChar(); 
+                        else  button.resetChar();
+                        currentLetter = button.getCurrentChar();
+                        keyTimer = millis();
+                    }
                 }
             }
             
+            //if SPACEBAR is pressed...
+            button = buttonsArray.get(1);
+            if (didMouseClick(button.x, button.y, button.w, button.h)) {
+                if (currentLetter != '\0') {
+                    currentWord += currentLetter;
+                    currentLetter = '\0';
+                }
+                currentTyped += currentWord + ' ';
+                currentWord = "";
+            }
+            
+            //if BACKSPACE is pressed...
+            button = buttonsArray.get(0);
+            if (didMouseClick(button.x, button.y, button.w, button.h)) {
+                  String[] words;
+                  String word;
+                  int len;
+                  if  (currentLetter != '\0') currentLetter = '\0';
+                  else if (currentWord.length() != 0) {
+                      len = currentWord.length();
+                      //if (currentWord.length() == 0) {print("WOW"); currentWord = "";}
+                      //else 
+                      currentWord = currentWord.substring(0, len-1);
+                  }
+                  else if (currentTyped.length() != 0) {
+                      len = currentTyped.length();
+                      if (currentTyped.charAt(len-1) == ' ') {
+                          currentTyped = currentTyped.substring(0, len-1);
+                          if (len > 1 && currentTyped.charAt(len-2) != ' ') {
+                              words = currentTyped.split(" ");
+                              word = words[words.length-1];
+                              currentWord = word;
+                              currentTyped = currentTyped.substring(0, len-1 - word.length());
+                          }
+                      }
+                  } 
+            }
         }
     }
-            
-                   
-                
-          
-        /*
-        if (didMouseClick(width/2 - 2.0*PPCM + (1*iWidth)/3, height/2 - 1.0*PPCM + (1*iHeight)/3, (iWidth)/3, (iHeight)/3)) {
-            currentLetter = abc[0];
-            lastCharacter = currentLetter;
-        }
-        
-        */
-/*        // Test click on left arrow
-        if (didMouseClick(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE)) {
-            currentLetter--;
-            if (currentLetter < '_') currentLetter = 'z';                  // wrap around to z
-        }
-        // Test click on right arrow
-        else if (didMouseClick(width/2, height/2, ARROW_SIZE, ARROW_SIZE)) {
-            currentLetter++;
-            if (currentLetter > 'z') currentLetter = '_';                  // wrap back to space (aka underscore)
-        }
-        // Test click on keyboard area (to confirm selection)
-        else {
-            if (currentLetter == '_') currentTyped+=" ";                   // if underscore, consider that a space bar
-            else if (currentLetter == '`' && currentTyped.length() > 0)    // if `, treat that as a delete command
-                currentTyped = currentTyped.substring(0, currentTyped.length() - 1);
-            else if (currentLetter != '`') currentTyped += currentLetter;  // if not any of the above cases, add the current letter to the typed string
-        }
-       
-    }*/
-    //else System.out.println("debug: CLICK NOT ACCEPTED");
 }
 
 
