@@ -39,7 +39,7 @@ int NUM_REPEATS            = 2;     // the total number of phrases to be tested
 int currTrialNum           = 0;     // the current trial number (indexes into phrases array above)
 String currentPhrase       = "";    // the current target phrase
 String currentTyped        = "";    // what the user has typed so far
-char currentLetter         = '|';
+String currentLetter         = "|";
 String currentWord         = "";
 int lastButton             = -1;
 int currentButton          = -1;
@@ -51,6 +51,7 @@ float startTime            = 0;     // time starts when the user clicks for the 
 float finishTime           = 0;     // records the time of when the final trial ends
 float lastTime             = 0;     // the timestamp of when the last trial was completed
 float lettersEnteredTotal  = 0;     // a running total of the number of letters the user has entered (need this for final WPM computation)
+float charsEnteredTotal    = 0;
 float lettersExpectedTotal = 0;     // a running total of the number of letters expected (correct phrases)
 float errorsTotal          = 0;     // a running total of the number of errors (when hitting next)
 
@@ -79,6 +80,7 @@ class Button {
         txt = alphabet[buttonIndex];
     }
     
+    
     void display() {
         noFill();
         stroke(0);
@@ -87,8 +89,8 @@ class Button {
         text(txt, x + w/2, y + h/2);
     }
     
-    char getCurrentChar() {
-        return txt.charAt(currentChar);
+    String getCurrentChar() {
+        return "" + txt.charAt(currentChar);
     }
     
     void advanceChar() {
@@ -193,11 +195,10 @@ void draw() {
                           T E X T    A R E A 
         =============================================================*/
 
-        if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != '|') {
+        if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != "" && currentLetter != "|") {
              buttonsArray.get(currentButton).resetChar();
              currentWord += currentLetter;
-             verifyWord();
-             currentLetter = '|';        
+             currentLetter = "";        
         }
         
         textAlign(LEFT);
@@ -208,6 +209,7 @@ void draw() {
         text("Entered:  " + currentTyped + currentWord + "|", width/2 - 4.0*PPCM, 140);                      // draw what the user has entered thus far 
           
         // Write current letter
+        verifyWord();
         float w = textWidth(possibleWord);
         textAlign(CENTER, BOTTOM);
         fill(100);
@@ -236,8 +238,11 @@ boolean didMouseClick(float x, float y, float w, float h) {
 }
 
 void verifyWord() {
+    String s = currentWord;
+    if (s.length() == 0 && currentLetter == "|") return;
+    if (currentLetter != "|") s += currentLetter;
     for (String word : words)
-        if (word.indexOf(currentWord) == 0) {
+        if (word.indexOf(s) == 0) {
             possibleWord = word;
             break;
         }
@@ -259,9 +264,9 @@ void mousePressed() {
                     currentButton = button.index;
 
                     if (lastButton != currentButton) {
-                        if (currentLetter != '|') {
+                        if (currentLetter != "" && currentLetter != "|") {
                             currentWord += currentLetter;
-                            verifyWord();
+                            //verifyWord();
                         }
                         if (lastButton != -1) buttonsArray.get(lastButton).resetChar();
                         currentLetter = button.getCurrentChar();
@@ -280,12 +285,12 @@ void mousePressed() {
             //if SPACEBAR is pressed...
             button = buttonsArray.get(1);
             if (didMouseClick(button.x, button.y, button.w, button.h)) {
-                if (currentLetter != '|') {
+                if (currentLetter != "" && currentLetter != "|") {
                     currentWord += currentLetter;
-                    currentLetter = '|';
                 }
                 currentTyped += currentWord + ' ';
                 currentWord = "";
+                currentLetter = "|";
                 possibleWord = currentWord;
             }
             
@@ -295,7 +300,7 @@ void mousePressed() {
                   String[] words;
                   String word;
                   int len;
-                  if  (currentLetter != '|') currentLetter = '|';
+                  if  (currentLetter != "|" && currentLetter != "") currentLetter = "";
                   else if (currentWord.length() != 0) {
                       len = currentWord.length();
                       currentWord = currentWord.substring(0, len-1);
@@ -312,13 +317,14 @@ void mousePressed() {
                           }
                       }
                   }
+                  if (currentWord.length() == 0) currentLetter = "|";
                   possibleWord = "";
             }
             
             button = buttonsArray.get(4);
             if (didMouseClick(button.x, button.y, button.w, button.h)) {
                 currentWord = possibleWord;
-                currentLetter = '|';
+                currentLetter = "";
             }
         }
     }
@@ -330,6 +336,7 @@ void nextTrial() {
   
     // Check if we're in the middle of the tests
     else if (startTime != 0 && finishTime == 0) {
+        currentTyped += currentWord;
         System.out.println("==================");
         System.out.println("Phrase " + (currTrialNum+1) + " of " + NUM_REPEATS);
         System.out.println("Target phrase: " + currentPhrase);
@@ -340,8 +347,10 @@ void nextTrial() {
         System.out.println("Time taken on this trial: " + (millis() - lastTime));
         System.out.println("Time taken since beginning: " + (millis() - startTime));
         System.out.println("==================");
+        //System.out.println(currentTyped);
         lettersExpectedTotal += currentPhrase.trim().length();
         lettersEnteredTotal += currentTyped.trim().length();
+        charsEnteredTotal += currentTyped.length();
         errorsTotal += computeLevenshteinDistance(currentTyped.trim(), currentPhrase.trim());
     }
   
@@ -355,17 +364,19 @@ void nextTrial() {
         System.out.println("Total letters expected: " + lettersExpectedTotal);
         System.out.println("Total errors entered: " + errorsTotal);
     
+        float cps = (charsEnteredTotal / (finishTime - startTime) / 1000f);
         float wpm = (lettersEnteredTotal / 5.0f) / ((finishTime - startTime) / 60000f);   // FYI - 60K is number of milliseconds in minute
         float freebieErrors = lettersExpectedTotal * .05;                                 // no penalty if errors are under 5% of chars
         float penalty = max(errorsTotal - freebieErrors, 0) * .5f;
         
+        System.out.println("Raw CPS: " + cps);
         System.out.println("Raw WPM: " + wpm);
         System.out.println("Freebie errors: " + freebieErrors);
         System.out.println("Penalty: " + penalty);
         System.out.println("WPM w/ penalty: " + (wpm - penalty));                         // yes, minus, because higher WPM is better
         System.out.println("==================");
         
-        printResults(wpm, freebieErrors, penalty);
+        printResults(cps, wpm, freebieErrors, penalty);
         
         currTrialNum++;                                                                   // increment by one so this mesage only appears once when all trials are done
         return;
@@ -377,12 +388,15 @@ void nextTrial() {
     else currTrialNum++;                                                                // increment trial number
 
     lastTime = millis();                                                                // record the time of when this trial ended
-    currentTyped = "";                                                                  // clear what is currently typed preparing for next trial
+    currentTyped = "";        // clear what is currently typed preparing for next trial
+    currentWord = "";
+    currentLetter = "|";
+    possibleWord = "";
     currentPhrase = phrases[currTrialNum];                                              // load the next phrase!
 }
 
 // Print results at the end of the study
-void printResults(float wpm, float freebieErrors, float penalty) {
+void printResults(float cps, float wpm, float freebieErrors, float penalty) {
     background(0);       // clears screen
     
     textFont(createFont("Arial", 16));    // sets the font to Arial size 16
@@ -391,9 +405,10 @@ void printResults(float wpm, float freebieErrors, float penalty) {
     
     text("Finished!", width / 2, height / 2); 
     text("Raw WPM: " + wpm, width / 2, height / 2 + 20);
-    text("Freebie errors: " + freebieErrors, width / 2, height / 2 + 40);
-    text("Penalty: " + penalty, width / 2, height / 2 + 60);
-    text("WPM with penalty: " + (wpm - penalty), width / 2, height / 2 + 80);
+    text("Raw CPS: " + cps, width / 2, height / 2 + 40);
+    text("Freebie errors: " + freebieErrors, width / 2, height / 2 + 60);
+    text("Penalty: " + penalty, width / 2, height / 2 + 80);
+    text("WPM with penalty: " + (wpm - penalty), width / 2, height / 2 + 100);
   
     saveFrame("results-######.png");    // saves screenshot in current folder    
 }
