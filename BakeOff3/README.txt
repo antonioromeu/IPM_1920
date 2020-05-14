@@ -1,12 +1,13 @@
+  
 Obrigado por testares o nosso projeto.
 
-O teclado foi baseado na disposiÃ§Ã£o e arquitetura T9 (tal como os Nokias antigos).
-Ou seja, para chegar Ã  letra "b" Ã© necesÃ¡rio clicar 2 vezes na tecla "abc".
+O teclado foi baseado na disposição e arquitetura T9 (tal como os Nokias antigos).
+Ou seja, para chegar à letra "b" é necesário clicar 2 vezes na tecla "abc".
 
 Existem 3 caracteres especiais no teclado:
-    "<"  apaga o Ãºltimo caracter inserido;
-    "_"  introduz a palavra escrita na frase, incluindo o espaÃ§o;
-    ">>" autocomplete da palavra que o utilizador estÃ¡ a escrever, sendo a mesma inserida automaticamente na frase.
+    "<"  apaga o último caracter inserido;
+    "_"  introduz a palavra escrita na frase, incluindo o espaço;
+    ">>" autocomplete da palavra que o utilizador está a escrever, sendo a mesma inserida automaticamente na frase com um espaço no fim.
 
-NÃ£o Ã© preciso preocupares-te com o espaÃ§o no fim da frase uma vez que este Ã© removido.
-As letras inseridas atÃ© ao momento aparecem a preto na zona nÃ£o interativa e a palavra sugerida aparece a cinzento na mesma zona.
+Se premires autocomplete para a última palavra pedida, não te esqueças de apagar o espaço que é inserido no fim da frase.
+As letras inseridas até ao momento aparecem a preto na zona não interativa e a palavra sugerida aparece a cinzento na mesma zona.

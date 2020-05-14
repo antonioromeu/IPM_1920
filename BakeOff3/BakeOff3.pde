@@ -63,8 +63,10 @@ String[] alphabet = {"<", "_", "abc", "def", ">>", "ghi", "jkl", "mno", "pqrs", 
 float keyTimer = 0;
 
 color backgroundColor = color(255);
-color keysColor = color(155);
-color lettersColor = color(0);
+color keysColor = #E5E5E5;
+color hoverColor = #FFCFE9;
+color lettersColor = #8338EC;
+color possibleColor = #FFBBE4;
 
 String[] words;
 String possibleWord         = "";
@@ -85,10 +87,17 @@ class Button {
   }
 
   void display() {
-    noFill();
-    stroke(0);
-    rect(x, y, w, h);
-    fill(0);
+    //noFill();
+    strokeWeight(3);
+    stroke(backgroundColor);
+    if (didMouseClick(x, y, w, h)) {
+      fill(hoverColor);
+      rect(x, y, w, h, h/4);
+    } else {
+      fill(keysColor);
+      rect(x, y, w, h, h/4);
+    }
+    fill(lettersColor);
     text(txt, x + w/2, y + h/2);
   }
 
@@ -161,9 +170,9 @@ void draw() {
 
   // Check if we just started the application
   if (startTime == 0 && !mousePressed) {
-    fill(0);
-    textAlign(CENTER);
-    text("Tap to start time!", width/2, height/2);
+    fill(lettersColor);
+    textAlign(CENTER, CENTER);
+    text("If you are ready to\nstart and have\nread the README\ntap to start time!\n\nGood Luck!", width/2, height/2);
   } else if (startTime == 0 && mousePressed) nextTrial();                    // show next sentence
 
   // Check if we are in the middle of a trial
@@ -179,22 +188,21 @@ void draw() {
 
     // Draw screen areas
     // simulates text box - not interactive
-    noStroke();
-    fill(200);
+    strokeWeight(3);
+    stroke(backgroundColor);
+    fill(backgroundColor);
     rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
     textAlign(CENTER);
     fill(0);
-    //textFont(createFont("Arial", 16));  // set the font to arial 24
-    //text("NOT INTERACTIVE", width/2, height/2 - 1.3 * PPCM);             // draw current letter
-    //textFont(createFont("Arial", 24));  // set the font to arial 24
 
     // THIS IS THE ONLY INTERACTIVE AREA (4cm x 4cm); do not change size
-    stroke(0, 255, 0);
-    noFill();
+    strokeWeight(3);
+    stroke(backgroundColor);
+    fill(backgroundColor);
     rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
 
     /*=============================================================
-                         T E X T    A R E A 
+     T E X T    A R E A 
      =============================================================*/
 
     if (keyTimer != 0 && (millis()-keyTimer) > timeInterval && currentLetter != "" && currentLetter != "|") {
@@ -203,22 +211,24 @@ void draw() {
       currentLetter = "";
     }
 
-    textFont(createFont("Arial", PPI/6));
+    textFont(createFont("Arial", PPCM/2.3));
     textAlign(LEFT);
     fill(100);
     text("Phrase " + (currTrialNum + 1) + " of " + NUM_REPEATS, width/2 - 4.0*PPCM, height/2 - 8.1*PPCM);   // write the trial count        
-    text("Target:    " + currentPhrase, width/2 - 4.0*PPCM, 100);                           // draw the target string
+    text("Target:     " + currentPhrase, width/2 - 4.0*PPCM, 100);                           // draw the target string
     fill(0);
-    text("Entered:  " + currentTyped + "|", width/2 - 4.0*PPCM, height/2 - 6.1*PPCM);                      // draw what the user has entered thus          
+    if (currentLetter == "|") text("Entered:  " + currentTyped + currentWord + "|", width/2 - 4.0*PPCM, height/2 - 6.1*PPCM);                      // draw what the user has entered thus          
+    else text("Entered:  " + currentTyped + currentWord + currentLetter + "|", width/2 - 4.0*PPCM, height/2 - 6.1*PPCM);                      // draw what the user has entered thus          
+
     // Write current letter
     verifyWord();
     float w = textWidth(possibleWord);
     textAlign(CENTER, BOTTOM);
-    fill(100);
-    text(possibleWord, width/2, height/2 - 1.2 * PPCM);
-    fill(0);
+    fill(possibleColor);
+    text(possibleWord, width/2, height/2 - 1.25 * PPCM);
+    fill(lettersColor);
     if (possibleWord != "") textAlign(LEFT, BOTTOM);
-    text(currentWord + currentLetter, width/2 - w/2, height/2 - 1.2 * PPCM);             // draw current letter
+    text(currentWord + currentLetter, width/2 - w/2, height/2 - 1.25 * PPCM);             // draw current letter
     noFill();
 
     /*===========================================================*/
@@ -240,15 +250,15 @@ boolean didMouseClick(float x, float y, float w, float h) {
 }
 
 void verifyWord() {
-    String s = currentWord;
-    if (s.length() == 0 && currentLetter == "|") return;
-    if (currentLetter != "|") s += currentLetter;
-    for (String word : words)
-      if (word.indexOf(s) == 0) {
-          possibleWord = word;
-          return;
-      }
-    possibleWord = "";
+  String s = currentWord;
+  if (s.length() == 0 && currentLetter == "|") return;
+  if (currentLetter != "|") s += currentLetter;
+  for (String word : words)
+    if (word.indexOf(s) == 0) {
+      possibleWord = word;
+      return;
+    }
+  possibleWord = "";
 }
 
 void mousePressed() {
@@ -306,19 +316,20 @@ void mousePressed() {
           len = currentWord.length();
           currentWord = currentWord.substring(0, len-1);
           currentLetter = "";
-        } else if (currentTyped.length() != 0) {
+        } else if (currentTyped.length() != 0) { 
           len = currentTyped.length();
-          if (currentTyped.charAt(len-1) == ' ') {
+          if (currentTyped.charAt(len-1) == ' ') { // se o caracter que vai ser apagado e um espaco
             currentTyped = currentTyped.substring(0, len-1);
             if (len > 1 && currentTyped.charAt(len-2) != ' ') {
               words = currentTyped.split(" ");
               word = words[words.length-1];
               currentWord = word;
+              currentLetter = "";
               currentTyped = currentTyped.substring(0, len-1 - word.length());
             }
           }
         }
-        if (currentWord.length() == 0) currentLetter = "|";
+        if (currentWord.length() == 0) currentLetter = "|"; //apagou uma palavra inteira
         possibleWord = "";
       }
 
@@ -342,8 +353,6 @@ void nextTrial() {
   // Check if we're in the middle of the tests
   else if (startTime != 0 && finishTime == 0) {
     currentTyped += currentWord;
-    if (currentTyped.charAt(currentTyped.length()-1) == ' ') // remove last space from currentTyped
-      currentTyped = currentTyped.substring(0, currentTyped.length() - 1); 
     System.out.println("==================");
     System.out.println("Phrase " + (currTrialNum+1) + " of " + NUM_REPEATS);
     System.out.println("Target phrase: " + currentPhrase);
